@@ -1,0 +1,256 @@
+<!DOCTYPE html>
+<html lang="hi">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>PHOTOGRAPHIA GALARY </title>
+    
+    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;600&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+    
+    <script src="https://www.gstatic.com/firebasejs/9.15.0/firebase-app-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/9.15.0/firebase-firestore-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/9.15.0/firebase-auth-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/9.15.0/firebase-storage-compat.js"></script>
+
+    <style>
+        /* --- CSS (Colors & Design) --- */
+        :root {
+            --primary-color: #6c5ce7;
+            --secondary-color: #00cec9;
+            --dark-bg: #2d3436;
+            --card-shadow: 0 10px 20px rgba(0,0,0,0.1);
+            --gradient: linear-gradient(135deg, #6c5ce7, #a29bfe);
+        }
+
+        body {
+            font-family: 'Poppins', sans-serif;
+            background-color: #f4f7f6;
+            margin: 0;
+            color: #333;
+        }
+
+        /* Navigation Bar */
+        nav {
+            background: var(--gradient);
+            padding: 15px 5%;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            color: white;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.2);
+            position: sticky;
+            top: 0;
+            z-index: 1000;
+        }
+
+        .logo { font-size: 1.5rem; font-weight: 600; letter-spacing: 1px; }
+
+        .nav-btns button {
+            background: white;
+            color: var(--primary-color);
+            border: none;
+            padding: 8px 18px;
+            border-radius: 20px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: 0.3s;
+        }
+
+        /* Hero Section */
+        .hero {
+            background: var(--gradient);
+            color: white;
+            text-align: center;
+            padding: 60px 20px;
+            border-bottom-left-radius: 50px;
+            border-bottom-right-radius: 50px;
+        }
+
+        /* Main Container */
+        .container { max-width: 900px; margin: -40px auto 40px; padding: 0 15px; }
+
+        /* Upload Form Card */
+        .upload-card {
+            background: white;
+            padding: 30px;
+            border-radius: 20px;
+            box-shadow: var(--card-shadow);
+            margin-bottom: 40px;
+        }
+
+        h3 { color: var(--primary-color); margin-top: 0; }
+
+        input, textarea {
+            width: 100%;
+            padding: 12px;
+            margin: 10px 0;
+            border: 2px solid #eee;
+            border-radius: 10px;
+            font-family: inherit;
+        }
+
+        .btn-main {
+            background: var(--gradient);
+            color: white;
+            border: none;
+            padding: 12px 30px;
+            border-radius: 10px;
+            cursor: pointer;
+            font-size: 1rem;
+            width: 100%;
+            font-weight: 600;
+        }
+
+        /* Photography/Gallery Feed */
+        .post-card {
+            background: white;
+            border-radius: 15px;
+            margin-bottom: 30px;
+            overflow: hidden;
+            box-shadow: var(--card-shadow);
+            transition: 0.3s;
+        }
+
+        .post-card img { width: 100%; height: 350px; object-fit: cover; }
+
+        .post-info { padding: 20px; }
+
+        .rating-btn {
+            background: #fff3cd;
+            color: #856404;
+            padding: 5px 12px;
+            border-radius: 15px;
+            cursor: pointer;
+            border: 1px solid #ffeeba;
+        }
+
+        /* Social Bar */
+        .social-footer {
+            background: var(--dark-bg);
+            color: white;
+            padding: 40px;
+            text-align: center;
+        }
+
+        .social-footer a { color: white; font-size: 2rem; margin: 0 15px; transition: 0.3s; }
+        .social-footer a:hover { color: var(--secondary-color); }
+
+    </style>
+</head>
+<body>
+
+<nav>
+    <div class="logo">MEMORIES ?</div>
+    <div class="nav-btns">
+        <button onclick="login()">Login / Profile</button>
+    </div>
+</nav>
+
+<section class="hero">
+    <h1>Welcome to Our DIGITAL MEMORY & PHOTOGRAPHY WORLD </h1>
+    <p>SHARE YOUR MOMORIES WITH WORLD & RATE PHOTOGRAPHS </p>
+</section>
+
+<div class="container">
+    <div class="upload-card">
+        <h3>?? Post Something New</h3>
+        <input type="text" id="postTitle" placeholder="Title likhein...">
+        <textarea id="postStory" rows="3" placeholder="Apni story likhein..."></textarea>
+        <input type="file" id="postFile" accept="image/*">
+        <button class="btn-main" onclick="uploadPost()">SHARE WITH YOUR DIGITAL WORLD</button>
+    </div>
+
+    <div id="mainFeed">
+        </div>
+</div>
+
+<footer class="social-footer">
+    <h3>FOLLOW & JOIN  US</h3>
+    <a href="https://instagram.com/AAPKA_INSTA"><i class="fab fa-instagram"></i></a>
+    <a href="https://youtube.com/AAPKA_YOUTUBE"><i class="fab fa-youtube"></i></a>
+    <p style="margin-top: 20px; opacity: 0.7;">© 2026 Designed for Community</p>
+</footer>
+
+<script>
+    // --- FIREBASE SETTINGS ---
+    // (Paste your real config here from Firebase Console)
+    const firebaseConfig = {
+        const firebaseConfig = {
+  apiKey: "AIzaSyC3T_Xg2A004kGMV0McFb_aVEzWm17jvwQ",
+  authDomain: "photographiagalary.firebaseapp.com",
+  projectId: "photographiagalary",
+  storageBucket: "photographiagalary.firebasestorage.app",
+  messagingSenderId: "634340925738",
+  appId: "1:634340925738:web:7c1dae14374e9ffa95fe53",
+  measurementId: "G-8Z80MVFVCK"
+};
+    };
+
+    firebase.initializeApp(firebaseConfig);
+    const db = firebase.firestore();
+    const storage = firebase.storage();
+    const auth = firebase.auth();
+
+    // --- LOGIN ---
+    function login() {
+        const provider = new firebase.auth.GoogleAuthProvider();
+        auth.signInWithPopup(provider).then(res => {
+            alert("Hello " + res.user.displayName);
+        });
+    }
+
+    // --- UPLOAD POST ---
+    async function uploadPost() {
+        const title = document.getElementById('postTitle').value;
+        const story = document.getElementById('postStory').value;
+        const file = document.getElementById('postFile').files[0];
+
+        if(!file || !title) return alert("Photo aur Title zaroori hai!");
+
+        const ref = storage.ref('posts/' + file.name);
+        await ref.put(file);
+        const url = await ref.getDownloadURL();
+
+        await db.collection("community_posts").add({
+            title: title,
+            story: story,
+            img: url,
+            stars: 0,
+            time: firebase.firestore.FieldValue.serverTimestamp()
+        });
+
+        alert("Success! Post live ho gayi.");
+        location.reload();
+    }
+
+    // --- LOAD POSTS ---
+    db.collection("community_posts").orderBy("time", "desc").onSnapshot(snap => {
+        const feed = document.getElementById('mainFeed');
+        feed.innerHTML = "";
+        snap.forEach(doc => {
+            const data = doc.data();
+            feed.innerHTML += `
+                <div class="post-card">
+                    <img src="${data.img}">
+                    <div class="post-info">
+                        <h2>${data.title}</h2>
+                        <p>${data.story}</p>
+                        <div style="display:flex; justify-content:space-between; align-items:center;">
+                            <span class="rating-btn" onclick="rate('${doc.id}')">? Rate: ${data.stars || 0}</span>
+                        </div>
+                    </div>
+                </div>
+            `;
+        });
+    });
+
+    async function rate(id) {
+        await db.collection("community_posts").doc(id).update({
+            stars: firebase.firestore.FieldValue.increment(1)
+        });
+    }
+</script>
+
+</body>
+</html>
