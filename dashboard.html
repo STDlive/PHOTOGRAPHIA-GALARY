@@ -1,0 +1,93 @@
+<!DOCTYPE html>
+<html lang="hi">
+<head>
+    <meta charset="UTF-8">
+    <title>Community Dashboard | Memories</title>
+    <script src="https://www.gstatic.com/firebasejs/9.15.0/firebase-app-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/9.15.0/firebase-firestore-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/9.15.0/firebase-storage-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/9.15.0/firebase-auth-compat.js"></script>
+    <style>
+        body { font-family: sans-serif; background: #f0f2f5; margin: 0; }
+        nav { background: #fff; padding: 15px; display: flex; justify-content: space-between; box-shadow: 0 2px 5px rgba(0,0,0,0.1); }
+        .container { max-width: 800px; margin: 20px auto; padding: 20px; }
+        .upload-section { background: white; padding: 20px; border-radius: 10px; margin-bottom: 30px; }
+        .post-card { background: white; margin-bottom: 20px; border-radius: 10px; overflow: hidden; box-shadow: 0 2px 10px rgba(0,0,0,0.1); }
+        .post-card img { width: 100%; max-height: 400px; object-fit: cover; }
+        .rating { padding: 15px; display: flex; align-items: center; gap: 10px; }
+        .star { color: orange; cursor: pointer; font-size: 20px; }
+    </style>
+</head>
+<body>
+
+<nav>
+    <b id="welcomeMsg">Welcome!</b>
+    <button onclick="logout()">Logout</button>
+</nav>
+
+<div class="container">
+    <div class="upload-section">
+        <h3>Share Memory/Photography</h3>
+        <input type="text" id="title" placeholder="Title..." style="width:100%; padding:10px; margin-bottom:10px;">
+        <input type="file" id="file" style="margin-bottom:10px;">
+        <button onclick="upload()" style="width:100%; padding:10px; background:blue; color:white; border:none; border-radius:5px;">Post Karein</button>
+    </div>
+
+    <div id="feed"></div>
+</div>
+
+<script>
+    const firebaseConfig = { /* APNA CONFIG YAHAN DALEIN */ };
+    firebase.initializeApp(firebaseConfig);
+    const db = firebase.firestore();
+    const storage = firebase.storage();
+    const auth = firebase.auth();
+
+    // Check if user is logged in
+    auth.onAuthStateChanged(user => {
+        if (!user) { window.location.href = "index.html"; }
+        else { document.getElementById('welcomeMsg').innerText = "Hi, " + user.displayName; }
+    });
+
+    async function upload() {
+        const title = document.getElementById('title').value;
+        const file = document.getElementById('file').files[0];
+        if(!file || !title) return alert("Sab bhariye!");
+
+        const ref = storage.ref('uploads/' + file.name);
+        await ref.put(file);
+        const url = await ref.getDownloadURL();
+
+        await db.collection("posts").add({
+            title: title, url: url, 
+            user: auth.currentUser.displayName, 
+            rating: 0, 
+            time: firebase.firestore.FieldValue.serverTimestamp()
+        });
+        location.reload();
+    }
+
+    db.collection("posts").orderBy("time", "desc").onSnapshot(snap => {
+        const feed = document.getElementById('feed');
+        feed.innerHTML = "";
+        snap.forEach(doc => {
+            const d = doc.data();
+            feed.innerHTML += 
+                <div class="post-card">
+                    <img src="${d.url}">
+                    <div style="padding:15px;"><b>${d.title}</b> <br> <small>By ${d.user}</small></div>
+                    <div class="rating" onclick="rate('${doc.id}')">
+                        <span class="star">?</span> <b>${d.rating} Ratings</b>
+                    </div>
+                </div>;
+        });
+    });
+
+    async function rate(id) {
+        await db.collection("posts").doc(id).update({ rating: firebase.firestore.FieldValue.increment(1) });
+    }
+
+    function logout() { auth.signOut(); }
+</script>
+</body>
+</html>
