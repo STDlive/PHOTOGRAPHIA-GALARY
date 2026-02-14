@@ -193,7 +193,7 @@
     const auth = firebase.auth();
 
     // --- LOGIN ---
-    function login() {
+    function login() {window.location.href = "dashboard.html";
         const provider = new firebase.auth.GoogleAuthProvider();
         auth.signInWithPopup(provider).then(res => {
             alert("Hello " + res.user.displayName);
@@ -255,3 +255,4 @@
 </body>
 
 </html>
+
